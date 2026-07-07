@@ -6,6 +6,7 @@ import time
 
 def get_weibo_hot_search():
     url = 'https://weibo.com/ajax/side/hotSearch'
+    # 保留你之前设置的全部反爬头
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json, text/plain, */*',
@@ -46,10 +47,13 @@ def get_weibo_hot_search():
         return None
 
 def save_to_csv(data):
+    # 检测文件是否存在（用于判断是否需要写表头）
     file_exists = os.path.isfile('weibo_hot_history.csv')
+    # 以追加模式打开，实现累加
     with open('weibo_hot_history.csv', 'a', newline='', encoding='utf-8-sig') as f:
         writer = csv.writer(f)
         if not file_exists:
+            # 如果文件不存在，先写入表头
             writer.writerow(['抓取时间', '排名', '关键词', '热度', '标签'])
         
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -62,7 +66,7 @@ def save_to_csv(data):
                 item.get('raw_hot', item.get('num', '')),
                 item.get('icon_desc', '')
             ])
-    print(f"✅ 数据已保存，共 {len(realtime)} 条")
+    print(f"✅ 数据已追加保存，共 {len(realtime)} 条")
 
 if __name__ == "__main__":
     print("=" * 40)
@@ -74,9 +78,3 @@ if __name__ == "__main__":
         save_to_csv(data)
     else:
         print("❌ 获取失败，请检查网络或稍后重试")
-        # 创建一个空文件标记失败，但仍然保留以便排查
-        with open('weibo_hot_history.csv', 'a', newline='', encoding='utf-8-sig') as f:
-            writer = csv.writer(f)
-            if not os.path.isfile('weibo_hot_history.csv'):
-                writer.writerow(['抓取时间', '状态'])
-            writer.writerow([datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '抓取失败'])
